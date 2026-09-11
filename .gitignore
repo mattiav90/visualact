@@ -1,0 +1,10 @@
+# build artifact -- rebuild with `cd hier_dump && make`
+hier_dump/hier_dump
+
+# generated per-run cache (hierarchy.json, floorplan.json, trace.vcd, watch_all.scr)
+runs/
+
+# python / OS noise
+__pycache__/
+*.pyc
+.DS_Store

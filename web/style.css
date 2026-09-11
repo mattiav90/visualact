@@ -1,0 +1,300 @@
+:root {
+  --bg: #f7f7f8;
+  --panel: #ffffff;
+  --border: #d9d9df;
+  --text: #1c1c1f;
+  --muted: #6b6b74;
+  --accent: #3f6fd1;
+  --idle: #ffffff;
+  --active: #3fae4c;
+  --blocked: #e0a53f;
+  --canvas-bg: #ffffff;
+}
+
+:root[data-theme="dark"] {
+  --bg: #1a1a1e;
+  --panel: #232328;
+  --border: #3a3a42;
+  --text: #e8e8ea;
+  --muted: #9a9aa4;
+  --accent: #7ba0ff;
+  --idle: #2c2c33;
+  --active: #3fae4c;
+  --blocked: #e0a53f;
+  --canvas-bg: #17171a;
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+header {
+  flex: 0 0 auto;
+  padding: 12px 20px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+}
+
+header h1 {
+  font-size: 16px;
+  margin: 0 0 8px 0;
+}
+
+.inputs {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.inputs label {
+  font-size: 12px;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+input, select, button {
+  font-size: 13px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--text);
+}
+
+.path-input {
+  font-size: 15px;
+  padding: 8px 10px;
+  min-width: 320px;
+}
+
+button {
+  cursor: pointer;
+  background: var(--accent);
+  color: white;
+  border: none;
+}
+
+button:hover { opacity: 0.9; }
+
+.icon-btn {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+  font-size: 16px;
+  line-height: 1;
+  padding: 6px 10px;
+}
+.icon-btn:hover { opacity: 0.7; background: var(--bg); }
+
+.tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.tab-btn {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+}
+
+.tab-btn.active {
+  background: var(--accent);
+  color: white;
+}
+
+main {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 20px;
+}
+
+.view { display: none; }
+.view.active {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.toolbar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.status {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.canvas {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 300px;
+  width: 100%;
+  background: var(--canvas-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: auto;
+}
+
+.node {
+  position: absolute;
+  box-sizing: border-box;
+  padding: 6px 8px;
+  border: 2px solid #888;
+  border-radius: 8px;
+  background: var(--idle);
+  text-align: center;
+  cursor: grab;
+  user-select: none;
+  font-size: 13px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.node .name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.node .name.vertical {
+  writing-mode: vertical-rl;
+  align-self: center;
+  max-height: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.node .type {
+  font-size: 11px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.node.dragging { cursor: grabbing; opacity: 0.85; }
+
+.node.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent), 0 1px 3px rgba(0,0,0,0.15);
+}
+
+/* An expanded module: its own sub-instances are separate sibling boxes
+   drawn on top of this one, inside its bounds -- this is just the frame +
+   header label. Still tints with .active/.blocked (rules below win the
+   cascade) so the container's own aggregate state stays visible around the
+   edges of whatever the nested children don't cover. */
+.node.container {
+  background: transparent;
+  border-style: dashed;
+  justify-content: flex-start;
+  align-items: flex-start;
+  text-align: left;
+}
+.node.container .name,
+.node.container .type {
+  flex: 0 0 auto;
+  max-width: calc(100% - 16px);
+}
+
+.marquee {
+  position: absolute;
+  border: 1px dashed var(--accent);
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  pointer-events: none;
+}
+
+.resize-handle {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 12px;
+  height: 12px;
+  cursor: nwse-resize;
+  background:
+    linear-gradient(135deg, transparent 0 50%, #888 50% 60%, transparent 60% 70%, #888 70% 80%, transparent 80%);
+}
+
+.node.active { background: var(--active); color: white; }
+.node.blocked { background: var(--blocked); }
+
+svg.edges {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.playback {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.playback input[type=range] {
+  flex: 1;
+}
+
+#timeLabel {
+  display: inline-block;
+  flex: 0 0 auto;
+  min-width: 15ch;
+  font-variant-numeric: tabular-nums;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.legend {
+  flex: 0 0 auto;
+  margin-top: 10px;
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+}
+
+.swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 1px solid #888;
+  border-radius: 3px;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+.swatch.idle { background: var(--idle); }
+.swatch.active { background: var(--active); }
+.swatch.blocked { background: var(--blocked); }
