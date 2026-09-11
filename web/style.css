@@ -408,8 +408,8 @@ svg.edges {
   margin-top: 10px;
   display: flex;
   align-items: center;
-  gap: 16px;
-  font-size: 12px;
+  gap: 22px;
+  font-size: 15px;
   flex-wrap: wrap;
 }
 
@@ -420,11 +420,11 @@ svg.edges {
 
 .swatch {
   display: inline-block;
-  width: 12px;
-  height: 12px;
+  width: 18px;
+  height: 18px;
   border: 1px solid #888;
-  border-radius: 3px;
-  margin-right: 4px;
+  border-radius: 4px;
+  margin-right: 6px;
   vertical-align: middle;
 }
 .swatch.idle { background: var(--idle); }

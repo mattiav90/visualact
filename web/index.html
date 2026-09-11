@@ -19,7 +19,7 @@
     <label>Focus instance path (optional)
       <input id="watchPrefix" type="text" placeholder="e.g. TB.space" size="16" title="Dotted instance path from the top process above down to whichever sub-instance's own hierarchy you want to view (matches what you'd type after `watch` at the actsim prompt). Leave blank to view the top process itself.">
     </label>
-    <button id="loadBtn">Load hierarchy</button>
+    <button id="loadBtn">&#128229; Load hierarchy</button>
     <button id="themeToggle" class="icon-btn" title="Toggle light/dark theme">&#9728;&#65039;</button>
   </div>
   <nav class="tabs">
@@ -29,14 +29,15 @@
       <span class="search-icon" aria-hidden="true">&#128269;</span>
       <input id="searchBox" type="text" placeholder="find a module..." title="Highlights every module whose name contains this text, in whichever tab is currently open.">
     </label>
+    <button id="addSearchMatchesBtn" title="Add every module currently highlighted by the search box to the Replay tab's selection, and open the channel status panel">&#10133; Add search matches</button>
   </nav>
 </header>
 
 <main>
   <section id="floorplan-view" class="view active">
     <div class="toolbar">
-      <button id="autoLayoutBtn">Auto-arrange</button>
-      <button id="saveFloorplanBtn">Save floorplan</button>
+      <button id="autoLayoutBtn">&#128208; Auto-arrange</button>
+      <button id="saveFloorplanBtn">&#128190; Save floorplan</button>
       <span id="floorplanStatus" class="status"></span>
     </div>
     <div id="floorplanCanvas" class="canvas"></div>
@@ -44,16 +45,16 @@
 
   <section id="replay-view" class="view">
     <div class="toolbar">
-      <button id="runSimBtn">Run simulation (actsim)</button>
+      <button id="runSimBtn">&#9654;&#65039; Run simulation (actsim)</button>
       <label>or load an existing trace.vcd
         <input id="vcdOverride" class="path-input" type="text" placeholder="/path/to/trace.vcd (e.g. from your own build)" size="52">
       </label>
-      <button id="loadTraceBtn">Load trace</button>
-      <button id="channelStatusBtn" title="Show the channel-by-channel status (pending / just completed) of the currently selected module(s)">Channel status</button>
+      <button id="loadTraceBtn">&#128194; Load trace</button>
+      <button id="channelStatusBtn" title="Show the channel-by-channel status (pending / just completed) of the currently selected module(s)">&#128202; Channel status</button>
       <span id="replayStatus" class="status"></span>
     </div>
     <div class="playback">
-      <button id="playPauseBtn">Play</button>
+      <button id="playPauseBtn">&#9654;&#65039; Play</button>
       <input id="scrubber" type="range" min="0" max="0" value="0" step="1">
       <span id="timeLabel">t = 0</span>
       <label>Speed

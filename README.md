@@ -4,11 +4,11 @@ VisualAct is a tool for looking at ACT designs that you simulate with
 `actsim`. It has two parts:
 
 1. **Floorplan** — shows the modules in your design and how they connect,
-   as boxes and lines you can drag around. You can click on any module and
-   open it up to see the modules inside it.
+   as boxes and lines you can drag around and arrange however you like.
 2. **Replay** — plays back a finished simulation and colors each module
    green when it's doing work, yellow when it's waiting, and white when
-   it's idle.
+   it's idle. A side panel can also show the exact status of every channel
+   on any module(s) you pick.
 
 VisualAct does not change anything in ACT or actsim. It only reads your
 `.act` files.
@@ -76,24 +76,30 @@ ACT_HOME=<path-to-your-ACT-install> python3 app.py
 Then open http://localhost:5055 in a browser.
 
 **Floorplan tab**: type in the design file and top process (same as you'd
-give actsim), and a focus path if you need one. Click "Load hierarchy."
-Drag boxes to arrange them. You can click and drag on empty space to select
-several boxes at once (hold Cmd, Ctrl, or Shift to add or remove one box
-from the selection). Drag a corner to resize a box — every box of the same
-type resizes with it. Double-click a name to turn it sideways, useful for
-narrow boxes. Click "Save floorplan" to keep your layout for next time.
+give actsim), and a focus path if you need one. Click "📥 Load hierarchy."
+Drag boxes to arrange them, or click "📐 Auto-arrange" to lay them out for
+you. You can click and drag on empty space to select several boxes at once
+(hold Cmd, Ctrl, or Shift to add or remove one box from the selection).
+Drag a corner to resize a box — every box of the same type resizes with it.
+Double-click a name to turn it sideways, useful for narrow boxes. Click
+"💾 Save floorplan" to keep your layout for next time.
 
-**Replay tab**: either click "Run simulation" (works for simple designs you
-can run with a plain `actsim` command), or type in the path to a
-`trace.vcd` you already made and click "Load trace." Then use play, pause,
-and the slider to move through the simulation. "Activity window %" controls
-how sensitive the coloring is — a real transaction on a channel only lasts
-an instant, so without some window around the current time, you'd almost
-never catch one. Click one or more modules (Cmd/Ctrl/Shift-click for more
-than one) and click "Channel status" to open a side panel listing every
-channel of the selected module(s) and whether each one is currently
-**pending** (waiting on its handshake partner) or has **just completed** a
-transfer — it updates live as you play or scrub.
+**Replay tab**: either click "▶️ Run simulation" (works for simple designs
+you can run with a plain `actsim` command), or type in the path to a
+`trace.vcd` you already made and click "📂 Load trace." Then use play,
+pause, and the slider to move through the simulation. "Activity window %"
+controls how sensitive the coloring is — a real transaction on a channel
+only lasts an instant, so without some window around the current time,
+you'd almost never catch one. Click one or more modules (Cmd/Ctrl/Shift-
+click for more than one) and click "📊 Channel status" to open a side panel
+listing every channel of the selected module(s) and whether each one is
+currently **pending** (waiting on its handshake partner) or has **just
+completed** a transfer — it updates live as you play or scrub.
+
+**Search**: the 🔍 box (top right, next to the tabs) highlights every
+module whose name contains what you type, in whichever tab is open. Click
+"➕ Add search matches" to add all of the currently highlighted modules to
+the Replay tab's selection and open the channel status panel for them.
 
 ## Main features
 
@@ -103,6 +109,7 @@ transfer — it updates live as you play or scrub.
   click for more); boxes of the same type resize together; auto-arrange
   lays out arrays as a real grid
 - Save and reload your layout
+- Search for a module by name and highlight every match
 - Play back a simulation with colors showing real activity, at any speed
 - A side panel listing the exact channel-by-channel status (pending / just
   completed) of any selected module(s), live during playback
@@ -134,7 +141,4 @@ save a floorplan, then load that trace file in the Replay tab.
   real transaction is too short to catch otherwise (see Replay tab above).
 - Very narrow channels (under 3 bits) can't show "waiting," only "idle" or
   "active."
-- If a box you opened up has a big 1-D array inside it, it may lay out as
-  one long row instead of a grid. You can drag things around by hand.
-- If you make a box smaller than what's inside it, the inside boxes will
-  stick out instead of being hidden.
+- `hier_dump` creates its output folder for you if it doesn't exist yet.

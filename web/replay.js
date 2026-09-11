@@ -289,7 +289,7 @@
 
   function setPlaying(on) {
     replay.playing = on;
-    document.getElementById("playPauseBtn").textContent = on ? "Pause" : "Play";
+    document.getElementById("playPauseBtn").textContent = on ? "⏸ Pause" : "▶️ Play";
     if (on) {
       replay.lastWall = performance.now();
       requestAnimationFrame(tick);
@@ -373,6 +373,18 @@
     });
     document.getElementById("closeChannelPanel").addEventListener("click", () => {
       document.getElementById("channelPanel").hidden = true;
+    });
+    document.getElementById("addSearchMatchesBtn").addEventListener("click", () => {
+      const matches = canvas().querySelectorAll(".node.search-match");
+      if (!matches.length) {
+        document.getElementById("replayStatus").textContent =
+          "no search matches -- type something in the search box first";
+        return;
+      }
+      matches.forEach((el) => replay.selected.add(el.dataset.name));
+      applySelectionClasses();
+      document.getElementById("channelPanel").hidden = false;
+      updateChannelPanel();
     });
     window.addEventListener("resize", renderStatic);
   });
