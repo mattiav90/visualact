@@ -395,6 +395,22 @@ svg.edges {
   flex: 1;
 }
 
+.window-label {
+  cursor: help;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+}
+.window-label.active-label {
+  color: var(--active);
+  border-color: var(--active);
+}
+.window-label.pending-label {
+  color: var(--blocked);
+  border-color: var(--blocked);
+}
+
 #timeLabel {
   display: inline-block;
   flex: 0 0 auto;
