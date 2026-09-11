@@ -10,7 +10,19 @@
     playing: false,
     curTime: 0,
     lastWall: 0,
+    selected: new Set(), // qualifiedName of modules selected for the channel panel
   };
+
+  // Multi-select modifier: Cmd on Mac, Ctrl on Windows/Linux, or Shift.
+  function isMultiKey(e) {
+    return e.shiftKey || e.metaKey || e.ctrlKey;
+  }
+
+  function applySelectionClasses() {
+    canvas().querySelectorAll(".node").forEach((el) => {
+      el.classList.toggle("selected", replay.selected.has(el.dataset.name));
+    });
+  }
 
   // Half-window in trace-time-units either side of the current instant,
   // e.g. pct=100 -> half-window covers the whole trace (always "active" if
@@ -71,8 +83,32 @@
       el.innerHTML = `<div class="name">${node.name}</div><div class="type">${node.type}</div>`;
       c.appendChild(el);
       const nameEl = el.querySelector(".name");
-      nameEl.addEventListener("dblclick", () => nameEl.classList.toggle("vertical"));
+      if (AP.state.floorplan[node.qName] && AP.state.floorplan[node.qName].vertical) {
+        nameEl.classList.add("vertical");
+      }
+      nameEl.addEventListener("dblclick", () => {
+        const entry = AP.state.floorplan[node.qName];
+        if (entry) {
+          entry.vertical = !entry.vertical;
+          nameEl.classList.toggle("vertical", entry.vertical);
+        } else {
+          nameEl.classList.toggle("vertical");
+        }
+      });
+
+      el.addEventListener("click", (e) => {
+        if (isMultiKey(e)) {
+          if (replay.selected.has(node.qName)) replay.selected.delete(node.qName);
+          else replay.selected.add(node.qName);
+        } else {
+          replay.selected = new Set([node.qName]);
+        }
+        applySelectionClasses();
+        updateChannelPanel();
+      });
     });
+
+    applySelectionClasses();
 
     AP.flattenChannels().forEach((ch) => {
       const a = ch.from ? center(ch.from) : null;
@@ -92,6 +128,7 @@
     });
 
     buildIncidence();
+    AP.applySearchHighlight("replayCanvas");
   }
 
   function buildIncidence() {
@@ -153,19 +190,71 @@
   // it did something once, long ago or far in the future.
   const BLOCKED_WINDOW_MULTIPLIER = 20;
 
-  function colorFor(instName, time) {
-    const chans = replay.incidence[instName] || [];
+  // Single per-channel classification, shared by node coloring and the
+  // channel-status panel so they always agree: "active" = just completed a
+  // real transfer (within the activity window), "blocked" = currently
+  // waiting on a handshake partner (and part of a real ongoing exchange,
+  // not just a wire that's never once been used), "idle" = neither.
+  function classifyChannel(channelName, time) {
     const half = halfWindow();
-    for (const ch of chans) {
-      if (hasActiveInWindow(ch, time, half)) return "active";
-    }
+    if (hasActiveInWindow(channelName, time, half)) return "active";
     const blockedHalf = half * BLOCKED_WINDOW_MULTIPLIER;
-    for (const ch of chans) {
-      if (stateAt(ch, time) === "blocked" && hasActiveInWindow(ch, time, blockedHalf)) {
-        return "blocked";
-      }
+    if (stateAt(channelName, time) === "blocked" && hasActiveInWindow(channelName, time, blockedHalf)) {
+      return "blocked";
     }
     return "idle";
+  }
+
+  function colorFor(instName, time) {
+    const chans = replay.incidence[instName] || [];
+    let sawBlocked = false;
+    for (const ch of chans) {
+      const c = classifyChannel(ch, time);
+      if (c === "active") return "active";
+      if (c === "blocked") sawBlocked = true;
+    }
+    return sawBlocked ? "blocked" : "idle";
+  }
+
+  function escapeHtml(s) {
+    return s.replace(/[&<>"']/g, (c) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+    }[c]));
+  }
+
+  const PANEL_LABEL = { active: "completed", blocked: "pending", idle: "idle" };
+
+  function updateChannelPanel() {
+    const panel = document.getElementById("channelPanel");
+    if (panel.hidden) return;
+    const body = document.getElementById("channelPanelBody");
+    const title = document.getElementById("channelPanelTitle");
+    title.textContent = `Channel status — t = ${Math.floor(replay.curTime)}`;
+
+    const targets = Array.from(replay.selected);
+    if (!targets.length) {
+      body.innerHTML =
+        '<div class="empty-hint">No modules selected. Click one or more modules in the canvas (Cmd/Ctrl/Shift-click to select several) to see their channels here.</div>';
+      return;
+    }
+
+    let html = "";
+    targets.forEach((qName) => {
+      html += `<div class="proc-heading">${escapeHtml(qName)}</div>`;
+      const chans = replay.incidence[qName] || [];
+      if (!chans.length) {
+        html += '<div class="empty-hint">(no channels)</div>';
+        return;
+      }
+      chans.forEach((ch) => {
+        const cls = classifyChannel(ch, replay.curTime);
+        html +=
+          `<div class="channel-row"><span class="chname" title="${escapeHtml(ch)}">` +
+          `${escapeHtml(ch)}</span><span class="chstate ${cls === "active" ? "completed" : cls === "blocked" ? "pending" : "idle"}">` +
+          `${PANEL_LABEL[cls]}</span></div>`;
+      });
+    });
+    body.innerHTML = html;
   }
 
   function paint(time) {
@@ -176,6 +265,7 @@
       el.classList.toggle("blocked", c === "blocked");
     });
     document.getElementById("timeLabel").textContent = `t = ${Math.floor(time)}`;
+    updateChannelPanel();
   }
 
   function seek(time) {
@@ -276,6 +366,13 @@
     document.getElementById("activityWindow").addEventListener("input", (e) => {
       replay.activityWindowPct = Math.min(100, Math.max(0, parseFloat(e.target.value) || 0));
       paint(replay.curTime);
+    });
+    document.getElementById("channelStatusBtn").addEventListener("click", () => {
+      document.getElementById("channelPanel").hidden = false;
+      updateChannelPanel();
+    });
+    document.getElementById("closeChannelPanel").addEventListener("click", () => {
+      document.getElementById("channelPanel").hidden = true;
     });
     window.addEventListener("resize", renderStatic);
   });

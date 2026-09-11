@@ -166,6 +166,22 @@ const AP = (function () {
     btn.textContent = theme === "dark" ? "\u{1F319}" : "☀️"; // moon : sun
   }
 
+  // Highlights every rendered node in the given canvas whose qualified
+  // name contains the current search box text (case-insensitive substring
+  // match). Called both on every keystroke and after any re-render (since
+  // rebuilding a canvas's nodes wipes whatever classes were on the old
+  // elements) -- safe to call any time, does nothing if the canvas is
+  // empty or the search box is blank (just clears any stale highlights).
+  function applySearchHighlight(canvasId) {
+    const canvasEl = document.getElementById(canvasId);
+    if (!canvasEl) return;
+    const query = (document.getElementById("searchBox").value || "").trim().toLowerCase();
+    canvasEl.querySelectorAll(".node").forEach((el) => {
+      const match = query.length > 0 && el.dataset.name.toLowerCase().includes(query);
+      el.classList.toggle("search-match", match);
+    });
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
     restoreInputs();
     document.querySelectorAll(".tab-btn").forEach((b) => {
@@ -179,6 +195,11 @@ const AP = (function () {
       theme = theme === "dark" ? "light" : "dark";
       applyTheme(theme);
       localStorage.setItem("ap.theme", theme);
+    });
+
+    document.getElementById("searchBox").addEventListener("input", () => {
+      applySearchHighlight("floorplanCanvas");
+      applySearchHighlight("replayCanvas");
     });
   });
 
@@ -197,5 +218,6 @@ const AP = (function () {
     descendantsOf,
     expandInstance,
     collapseInstance,
+    applySearchHighlight,
   };
 })();

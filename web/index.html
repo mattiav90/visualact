@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>actsim profiler</title>
+<title>VisualAct</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header>
-  <h1>actsim profiler</h1>
+  <h1>VisualAct</h1>
   <div class="inputs">
     <label>Design .act file
       <input id="designPath" class="path-input" type="text" placeholder="/path/to/design.act" size="48" title="Exactly the file you'd pass to `actsim <file> <top>` for the real simulation.">
@@ -25,6 +25,10 @@
   <nav class="tabs">
     <button class="tab-btn active" data-tab="floorplan">1. Floorplan</button>
     <button class="tab-btn" data-tab="replay">2. Replay</button>
+    <label class="search-box">
+      <span class="search-icon" aria-hidden="true">&#128269;</span>
+      <input id="searchBox" type="text" placeholder="find a module..." title="Highlights every module whose name contains this text, in whichever tab is currently open.">
+    </label>
   </nav>
 </header>
 
@@ -32,8 +36,6 @@
   <section id="floorplan-view" class="view active">
     <div class="toolbar">
       <button id="autoLayoutBtn">Auto-arrange</button>
-      <button id="expandBtn" title="Expand every selected module to show its own sub-instances nested inside it">Expand selected</button>
-      <button id="collapseBtn" title="Collapse every selected module back to a plain box">Collapse selected</button>
       <button id="saveFloorplanBtn">Save floorplan</button>
       <span id="floorplanStatus" class="status"></span>
     </div>
@@ -47,6 +49,7 @@
         <input id="vcdOverride" class="path-input" type="text" placeholder="/path/to/trace.vcd (e.g. from your own build)" size="52">
       </label>
       <button id="loadTraceBtn">Load trace</button>
+      <button id="channelStatusBtn" title="Show the channel-by-channel status (pending / just completed) of the currently selected module(s)">Channel status</button>
       <span id="replayStatus" class="status"></span>
     </div>
     <div class="playback">
@@ -72,11 +75,21 @@
         <input id="activityWindow" type="number" min="0" max="100" step="0.1" size="6" title="A channel counts as 'active' (green) if it had a real transaction within this % of the total trace length, centered on the current instant -- not just at this exact instant. Real transactions are near-instantaneous relative to typical trace lengths, so without a window even a very busy module would almost never show green. Defaults to 0.5%; increase to make brief bursts more visible, decrease for a more literal instant-by-instant view.">%
       </label>
     </div>
-    <div id="replayCanvas" class="canvas"></div>
+    <div class="replay-body">
+      <div id="replayCanvas" class="canvas"></div>
+      <div id="channelPanel" class="channel-panel" hidden>
+        <div class="channel-panel-header">
+          <span id="channelPanelTitle">Channel status</span>
+          <button id="closeChannelPanel" class="icon-btn" title="Close">&times;</button>
+        </div>
+        <div id="channelPanelBody" class="channel-panel-body"></div>
+      </div>
+    </div>
     <div class="legend">
       <span><i class="swatch idle"></i> idle</span>
       <span><i class="swatch active"></i> active</span>
       <span><i class="swatch blocked"></i> blocked</span>
+      <span class="hint">Select module(s) in the canvas (click, or Cmd/Ctrl/Shift-click for more) then click "Channel status."</span>
     </div>
   </section>
 </main>

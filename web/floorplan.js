@@ -63,6 +63,13 @@
     applySelectionClasses();
   }
 
+  // Multi-select modifier: Cmd on Mac, Ctrl on Windows/Linux, or Shift --
+  // any of them toggles a node in/out of the selection instead of
+  // replacing it.
+  function isMultiKey(e) {
+    return e.shiftKey || e.metaKey || e.ctrlKey;
+  }
+
   // "Base[0][3]" -> {base: "Base", idx: [0, 3]}; a name with no bracket
   // suffix -> {base: name, idx: null} (a scalar, non-arrayed instance).
   const ARRAY_NAME_RE = /^(.*?)((?:\[\d+\])+)$/;
@@ -150,61 +157,6 @@
     render();
   }
 
-  // Lay a just-expanded node's children out inside/below its current box
-  // (unless they already have saved positions, e.g. from a reloaded
-  // floorplan), and grow the parent box to fit them.
-  function ensureChildLayout(qName, childHier) {
-    const alreadyPositioned = childHier.instances.some(
-      (i) => AP.state.floorplan[`${qName}/${i.name}`]
-    );
-    if (alreadyPositioned) return;
-
-    const pad = 10, headerH = 26;
-    const parentBox = box(qName) || { x: 20, y: 20, w: DEFAULT_W, h: DEFAULT_H };
-    const { positions, width, height } = computeLayout(
-      childHier.instances,
-      parentBox.x + pad,
-      parentBox.y + headerH
-    );
-    positions.forEach((p) => {
-      AP.state.floorplan[`${qName}/${p.name}`] = { x: p.x, y: p.y, w: DEFAULT_W, h: DEFAULT_H };
-    });
-
-    const b = AP.state.floorplan[qName];
-    b.w = Math.max(b.w || DEFAULT_W, width + pad * 2);
-    b.h = Math.max(b.h || DEFAULT_H, height + headerH + pad);
-  }
-
-  async function expandSelected() {
-    const status = document.getElementById("floorplanStatus");
-    const targets = Array.from(selected);
-    if (!targets.length) {
-      status.textContent = "select one or more modules first";
-      return;
-    }
-    status.textContent = `expanding ${targets.length} module(s)...`;
-    for (const qName of targets) {
-      try {
-        await AP.expandInstance(qName);
-        const child = AP.state.children.get(qName);
-        if (child) ensureChildLayout(qName, child);
-      } catch (e) {
-        status.textContent = `expand failed for ${qName}: ${e.message}`;
-        render();
-        return;
-      }
-    }
-    render();
-    status.textContent = `expanded ${targets.length} module(s)`;
-  }
-
-  function collapseSelected() {
-    const targets = Array.from(selected);
-    if (!targets.length) return;
-    targets.forEach((qName) => AP.collapseInstance(qName));
-    render();
-  }
-
   // Dragging any node in the current selection moves every selected node
   // (and, for an expanded one, everything nested inside it) together;
   // dragging a node outside the selection selects just that one first
@@ -219,7 +171,7 @@
       if (e.target.classList.contains("resize-handle")) return;
       e.stopPropagation(); // don't let this bubble into the canvas marquee handler
 
-      if (e.shiftKey) {
+      if (isMultiKey(e)) {
         toggleSelected(qName);
         return;
       }
@@ -289,10 +241,13 @@
   // Double-click a node's name label to rotate it vertical (useful once a
   // box is resized narrow/tall); double-click again to go back to
   // horizontal. Plain single click still just selects the node as usual.
-  function makeNameToggle(nameEl) {
+  // Persisted on the floorplan entry itself so "Save floorplan" remembers it.
+  function makeNameToggle(nameEl, qName) {
     nameEl.addEventListener("dblclick", (e) => {
       e.stopPropagation();
-      nameEl.classList.toggle("vertical");
+      const b = AP.state.floorplan[qName];
+      b.vertical = !b.vertical;
+      nameEl.classList.toggle("vertical", b.vertical);
     });
   }
 
@@ -373,7 +328,7 @@
       rectEl.style.width = "0px";
       rectEl.style.height = "0px";
       c.appendChild(rectEl);
-      if (!e.shiftKey) setSelected([]);
+      if (!isMultiKey(e)) setSelected([]);
       e.preventDefault();
     });
 
@@ -398,7 +353,7 @@
         if (!nel) return;
         if (hit) {
           selected.add(node.qName);
-        } else if (!e.shiftKey) {
+        } else if (!isMultiKey(e)) {
           selected.delete(node.qName);
         }
         nel.classList.toggle("selected", selected.has(node.qName));
@@ -470,12 +425,15 @@
         `<div class="name">${node.name}</div><div class="type">${node.type}</div>` +
         `<div class="resize-handle" title="drag to resize"></div>`;
       c.appendChild(el);
+      const nameEl = el.querySelector(".name");
+      if (AP.state.floorplan[node.qName].vertical) nameEl.classList.add("vertical");
       makeDraggable(el, node.qName);
       makeResizable(el, el.querySelector(".resize-handle"), node.qName);
-      makeNameToggle(el.querySelector(".name"));
+      makeNameToggle(nameEl, node.qName);
     });
 
     drawEdges();
+    AP.applySearchHighlight("floorplanCanvas");
   }
 
   async function load() {
@@ -534,8 +492,6 @@
     document.getElementById("loadBtn").addEventListener("click", load);
     document.getElementById("autoLayoutBtn").addEventListener("click", autoLayout);
     document.getElementById("saveFloorplanBtn").addEventListener("click", save);
-    document.getElementById("expandBtn").addEventListener("click", expandSelected);
-    document.getElementById("collapseBtn").addEventListener("click", collapseSelected);
     window.addEventListener("resize", drawEdges);
     setupMarquee();
   });

@@ -163,6 +163,34 @@ cached so a reload doesn't need to re-fetch anything). The loader treats a
 file with no `positions` key as the old flat `{name:{x,y,w,h}}` format for
 backward compatibility — keep that check if you change the schema again.
 
+**The "expand a module in place" UI was removed** (the "Expand selected" /
+"Collapse selected" buttons and their handlers in `floorplan.js`) at the
+user's request, but this whole underlying model was deliberately left
+intact rather than ripped out: `AP.state.expanded`/`children`,
+`flattenVisible()`/`flattenChannels()`, `expandInstance()`/
+`collapseInstance()` in `common.js` all still exist and work. With no UI
+entry point, `expanded` just stays permanently empty, so `flattenVisible()`
+always returns exactly the top-level instances — i.e. current behavior is
+identical to never having built recursion at all, but re-adding a UI
+trigger later is cheap (see git history before this point for the removed
+`expandSelected`/`collapseSelected`/`ensureChildLayout` functions in
+`floorplan.js` if resurrecting it).
+
+## Channel-status panel (Replay tab)
+
+Selecting module(s) in the Replay canvas (click / Cmd+click / Ctrl+click /
+Shift+click — `isMultiKey()` in `replay.js`, independent from Floorplan
+tab's own `selected` Set) and clicking "Channel status" opens a side panel
+(`#channelPanel`) listing every incident channel of the selected module(s)
+with a live status label per channel: **completed** (a real transfer
+happened within the activity window), **pending** (currently blocked, part
+of a real ongoing exchange), or **idle**. This reuses
+`classifyChannel(channelName, time)`, factored out of `colorFor()` so node
+coloring and the panel can never disagree about what a given channel is
+doing at a given instant. The panel re-renders from `paint()` (so it's live
+during play/scrub) but only does any work when `#channelPanel` isn't
+`hidden`, to avoid needless DOM churn while it's closed.
+
 ## Replay coloring: windowed, not instantaneous
 
 A real VCD "active" event lasts ~1 trace-time-unit; real traces span up to

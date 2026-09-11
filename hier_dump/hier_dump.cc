@@ -40,9 +40,26 @@
 #include <act/iter.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <errno.h>
 #include <map>
 #include <string>
 #include <vector>
+
+// mkdir -p equivalent: create outdir (and any missing parent directories)
+// so callers never have to remember to do it themselves first.
+static bool ensureDir(const std::string &path) {
+  if (path.empty()) return true;
+  struct stat st;
+  if (stat(path.c_str(), &st) == 0) return S_ISDIR(st.st_mode);
+
+  size_t slash = path.find_last_of('/');
+  if (slash != std::string::npos && slash > 0) {
+    if (!ensureDir(path.substr(0, slash))) return false;
+  }
+  if (mkdir(path.c_str(), 0755) != 0 && errno != EEXIST) return false;
+  return true;
+}
 
 struct Endpoint {
   std::string instance;  // empty = design boundary (top-level port/local var)
@@ -109,13 +126,7 @@ static std::vector<std::string> splitDotted(const std::string &s) {
 
 int main(int argc, char **argv) {
   if (argc != 4 && argc != 5) {
-    fprintf(stderr,
-            "Usage: %s <design.act> <SimulatedTopProcess> <outdir> [focus-path]\n"
-            "  <design.act>/<SimulatedTopProcess>: exactly what you'd pass to\n"
-            "  `actsim <design.act> <SimulatedTopProcess>` for the real sim.\n"
-            "  <focus-path>: dotted instance path (e.g. `TB.space`) from that\n"
-            "  real top down to the sub-instance whose hierarchy to dump --\n"
-            "  omit to dump <SimulatedTopProcess> itself.\n",
+    fprintf(stderr, "Usage: %s <design.act> <SimulatedTopProcess> <outdir> [focus-path]\n",
             argv[0]);
     return 1;
   }
@@ -267,6 +278,11 @@ int main(int argc, char **argv) {
     std::string watchName =
         focusPath.empty() ? dottedName(*nameSrc) : focusPath + "." + dottedName(*nameSrc);
     channels.push_back(Chan{watchName, from->instance, to->instance});
+  }
+
+  if (!ensureDir(outdir)) {
+    fprintf(stderr, "Could not create output directory `%s': %s\n", outdir, strerror(errno));
+    return 1;
   }
 
   std::string hierPath = std::string(outdir) + "/hierarchy.json";

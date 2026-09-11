@@ -78,12 +78,10 @@ Then open http://localhost:5055 in a browser.
 **Floorplan tab**: type in the design file and top process (same as you'd
 give actsim), and a focus path if you need one. Click "Load hierarchy."
 Drag boxes to arrange them. You can click and drag on empty space to select
-several boxes at once (hold shift to add or remove one box from the
-selection). Drag a corner to resize a box — every box of the same type
-resizes with it. Double-click a name to turn it sideways, useful for narrow
-boxes. Select one or more boxes and click "Expand selected" to see what's
-inside them, or "Collapse selected" to close them back up. Click "Save
-floorplan" to keep your layout for next time.
+several boxes at once (hold Cmd, Ctrl, or Shift to add or remove one box
+from the selection). Drag a corner to resize a box — every box of the same
+type resizes with it. Double-click a name to turn it sideways, useful for
+narrow boxes. Click "Save floorplan" to keep your layout for next time.
 
 **Replay tab**: either click "Run simulation" (works for simple designs you
 can run with a plain `actsim` command), or type in the path to a
@@ -91,17 +89,23 @@ can run with a plain `actsim` command), or type in the path to a
 and the slider to move through the simulation. "Activity window %" controls
 how sensitive the coloring is — a real transaction on a channel only lasts
 an instant, so without some window around the current time, you'd almost
-never catch one.
+never catch one. Click one or more modules (Cmd/Ctrl/Shift-click for more
+than one) and click "Channel status" to open a side panel listing every
+channel of the selected module(s) and whether each one is currently
+**pending** (waiting on its handshake partner) or has **just completed** a
+transfer — it updates live as you play or scrub.
 
 ## Main features
 
 - Shows the full hierarchy of a design, with arrays like `PE[i][j]` shown
   as individual boxes, correctly wired
-- Drag and resize boxes; select several at once; boxes of the same type
-  resize together; auto-arrange lays out arrays as a real grid
-- Open up any box to see what's inside it, as many levels deep as you want
-- Save and reload your layout, including what you had expanded
+- Drag and resize boxes; select several at once (click, or Cmd/Ctrl/Shift-
+  click for more); boxes of the same type resize together; auto-arrange
+  lays out arrays as a real grid
+- Save and reload your layout
 - Play back a simulation with colors showing real activity, at any speed
+- A side panel listing the exact channel-by-channel status (pending / just
+  completed) of any selected module(s), live during playback
 - Light and dark theme
 
 ## Example: SPACE

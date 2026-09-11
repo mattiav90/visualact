@@ -102,7 +102,35 @@ button:hover { opacity: 0.9; }
 
 .tabs {
   display: flex;
+  align-items: center;
   gap: 4px;
+}
+
+.search-box {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--panel);
+}
+
+.search-box .search-icon {
+  font-size: 13px;
+  opacity: 0.7;
+}
+
+.search-box input {
+  border: none;
+  padding: 2px 0;
+  background: transparent;
+  width: 200px;
+  font-size: 13px;
+}
+.search-box input:focus {
+  outline: none;
 }
 
 .tab-btn {
@@ -152,11 +180,100 @@ main {
   position: relative;
   flex: 1 1 auto;
   min-height: 300px;
+  min-width: 0;
   width: 100%;
   background: var(--canvas-bg);
   border: 1px solid var(--border);
   border-radius: 8px;
   overflow: auto;
+}
+
+.replay-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  gap: 10px;
+}
+
+/* Styled like a terminal on purpose (dark, monospace) regardless of the
+   app's own light/dark theme -- it's meant to read as a log/console. */
+.channel-panel {
+  flex: 0 0 360px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: #0e0e10;
+  color: #d8d8dc;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+}
+
+/* `.channel-panel { display: flex }` above and the browser's built-in
+   `[hidden] { display: none }` have equal specificity, so without this the
+   panel would win the tie and stay visible even with the `hidden`
+   attribute set -- an ID selector always outranks a class one. */
+#channelPanel[hidden] {
+  display: none;
+}
+
+.channel-panel-header {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  background: #1c1c1f;
+  border-bottom: 1px solid #333;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 13px;
+}
+
+.channel-panel-header button {
+  background: transparent;
+  border: none;
+  color: #d8d8dc;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+}
+.channel-panel-header button:hover { opacity: 0.7; }
+
+.channel-panel-body {
+  flex: 1 1 auto;
+  overflow: auto;
+  padding: 8px 10px;
+}
+
+.channel-panel-body .proc-heading {
+  color: #8ab4ff;
+  margin: 10px 0 4px;
+  font-weight: 600;
+}
+.channel-panel-body .proc-heading:first-child { margin-top: 0; }
+
+.channel-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 2px 0;
+}
+.channel-row .chname {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.channel-row .chstate { flex: 0 0 auto; }
+.channel-row .chstate.pending { color: #e0a53f; }
+.channel-row .chstate.completed { color: #3fae4c; }
+.channel-row .chstate.idle { color: #777; }
+
+.channel-panel-body .empty-hint {
+  color: #777;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 .node {
@@ -207,6 +324,14 @@ main {
 .node.selected {
   border-color: var(--accent);
   box-shadow: 0 0 0 2px var(--accent), 0 1px 3px rgba(0,0,0,0.15);
+}
+
+/* Search match: an outline (not a border/box-shadow) so it layers cleanly
+   on top of .selected and .active/.blocked without fighting either. */
+.node.search-match {
+  outline: 3px solid #ff5252;
+  outline-offset: 2px;
+  z-index: 5;
 }
 
 /* An expanded module: its own sub-instances are separate sibling boxes
@@ -282,8 +407,15 @@ svg.edges {
   flex: 0 0 auto;
   margin-top: 10px;
   display: flex;
+  align-items: center;
   gap: 16px;
   font-size: 12px;
+  flex-wrap: wrap;
+}
+
+.legend .hint {
+  color: var(--muted);
+  margin-left: auto;
 }
 
 .swatch {
