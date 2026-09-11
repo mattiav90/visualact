@@ -46,8 +46,14 @@ header {
 }
 
 header h1 {
-  font-size: 16px;
-  margin: 0 0 8px 0;
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  margin: 0 0 12px 0;
+  background: linear-gradient(135deg, var(--accent), var(--active));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .inputs {
@@ -186,6 +192,121 @@ main {
   border: 1px solid var(--border);
   border-radius: 8px;
   overflow: auto;
+}
+
+/* Easter egg: hold the mouse still in the bottom-right corner and it lifts
+   like a page corner, revealing a little animated async pipeline
+   underneath. The delay is on the *hover* rule only, so it takes a
+   deliberate pause to find but collapses instantly when you leave. */
+.corner-egg {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 34px;
+  height: 34px;
+  z-index: 40;
+  cursor: default;
+}
+
+.corner-fold {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0 0 34px 34px;
+  border-color: transparent transparent color-mix(in srgb, var(--accent) 30%, var(--canvas-bg) 70%) transparent;
+  opacity: 0.6;
+  filter: drop-shadow(-1px -1px 2px rgba(0,0,0,0.25));
+  transition: border-width 0.25s ease, opacity 0.25s ease;
+}
+
+.corner-egg:hover .corner-fold {
+  transition: border-width 0.3s ease 0.8s, opacity 0.3s ease 0.8s;
+  border-width: 0 0 56px 56px;
+  opacity: 0.9;
+}
+
+.corner-reveal {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px 0 0 0;
+  box-shadow: -4px -4px 16px rgba(0,0,0,0.35);
+  transition: width 0.3s ease, height 0.3s ease;
+  pointer-events: none;
+}
+
+.corner-egg:hover .corner-reveal {
+  transition: width 0.35s ease 0.8s, height 0.35s ease 0.8s;
+  width: 230px;
+  height: 110px;
+}
+
+.corner-reveal svg {
+  width: 230px;
+  height: 110px;
+  display: block;
+}
+
+.async-circuit .wire {
+  stroke: var(--muted);
+  stroke-width: 2;
+  fill: none;
+}
+
+.async-circuit .egg-title {
+  fill: var(--accent);
+  font-family: ui-monospace, monospace;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-anchor: middle;
+  pointer-events: none;
+}
+
+.async-circuit .gate rect {
+  fill: var(--panel);
+  stroke: var(--accent);
+  stroke-width: 2;
+  animation: corner-gate-pulse 2.5s ease-in-out infinite;
+  animation-play-state: paused;
+}
+
+.async-circuit .gate text {
+  fill: var(--text);
+  font-size: 13px;
+  font-family: ui-monospace, monospace;
+  text-anchor: middle;
+  pointer-events: none;
+}
+
+.async-circuit .token {
+  fill: var(--active);
+  animation: corner-token-flow 2.5s linear infinite;
+  animation-play-state: paused;
+}
+
+.corner-egg:hover .async-circuit .gate rect,
+.corner-egg:hover .async-circuit .token {
+  animation-play-state: running;
+}
+
+@keyframes corner-token-flow {
+  0%   { transform: translateX(0); opacity: 1; }
+  95%  { opacity: 1; }
+  100% { transform: translateX(170px); opacity: 0; }
+}
+
+@keyframes corner-gate-pulse {
+  0%, 85%, 100% { fill: var(--panel); }
+  90% { fill: var(--active); }
 }
 
 .replay-body {

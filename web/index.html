@@ -43,7 +43,22 @@
       <button id="saveFloorplanBtn">&#128190; Save floorplan</button>
       <span id="floorplanStatus" class="status"></span>
     </div>
-    <div id="floorplanCanvas" class="canvas"></div>
+    <div id="floorplanCanvas" class="canvas">
+      <div class="corner-egg">
+        <div class="corner-fold"></div>
+        <div class="corner-reveal">
+          <svg viewBox="0 0 230 110" class="async-circuit">
+            <text class="egg-title" x="115" y="18">AVLSI</text>
+            <line class="wire" x1="20" y1="55" x2="220" y2="55"></line>
+            <g class="gate"><rect x="20" y="40" width="30" height="30" rx="6" style="animation-delay:0s"></rect><text x="35" y="60">C</text></g>
+            <g class="gate"><rect x="80" y="40" width="30" height="30" rx="6" style="animation-delay:0.6s"></rect><text x="95" y="60">C</text></g>
+            <g class="gate"><rect x="140" y="40" width="30" height="30" rx="6" style="animation-delay:1.3s"></rect><text x="155" y="60">C</text></g>
+            <g class="gate"><rect x="190" y="40" width="30" height="30" rx="6" style="animation-delay:1.9s"></rect><text x="205" y="60">C</text></g>
+            <circle class="token" cx="35" cy="55" r="6"></circle>
+          </svg>
+        </div>
+      </div>
+    </div>
   </section>
 
   <section id="replay-view" class="view">
@@ -84,7 +99,22 @@
       </label>
     </div>
     <div class="replay-body">
-      <div id="replayCanvas" class="canvas"></div>
+      <div id="replayCanvas" class="canvas">
+        <div class="corner-egg">
+          <div class="corner-fold"></div>
+          <div class="corner-reveal">
+            <svg viewBox="0 0 230 110" class="async-circuit">
+              <text class="egg-title" x="115" y="18">AVLSI</text>
+              <line class="wire" x1="20" y1="55" x2="220" y2="55"></line>
+              <g class="gate"><rect x="20" y="40" width="30" height="30" rx="6" style="animation-delay:0s"></rect><text x="35" y="60">C</text></g>
+              <g class="gate"><rect x="80" y="40" width="30" height="30" rx="6" style="animation-delay:0.6s"></rect><text x="95" y="60">C</text></g>
+              <g class="gate"><rect x="140" y="40" width="30" height="30" rx="6" style="animation-delay:1.3s"></rect><text x="155" y="60">C</text></g>
+              <g class="gate"><rect x="190" y="40" width="30" height="30" rx="6" style="animation-delay:1.9s"></rect><text x="205" y="60">C</text></g>
+              <circle class="token" cx="35" cy="55" r="6"></circle>
+            </svg>
+          </div>
+        </div>
+      </div>
       <div id="channelPanel" class="channel-panel" hidden>
         <div class="channel-panel-header">
           <span id="channelPanelTitle">Channel status</span>
