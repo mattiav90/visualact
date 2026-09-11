@@ -115,23 +115,31 @@ the Replay tab's selection and open the channel status panel for them.
   completed) of any selected module(s), live during playback
 - Light and dark theme
 
-## Example: SPACE
+## Example
 
-SPACE (`~/Yale/project/SPACE`) is run with `make v test0` (or `test0M`),
-which actually runs `actsim top.act top < act_ref0.scr`. `top` contains
-`TB`, which contains `space` (the actual accelerator). To look at the
-accelerator itself:
+Say your design lives in `chip.act`, and you normally simulate it with:
 
 ```
-hier_dump top.act top /tmp/space_hier TB.space
+actsim chip.act top
 ```
 
-The `watch` line this makes is already placed inside
-`scripts/simulation/actsim_files/act_ref0.scr`. So running `make v test0`
-already makes a trace file at
-`test/testcache/generic/SPACE/trace.vcd`. In VisualAct: Design = `top.act`,
-Top process = `top`, Focus instance path = `TB.space`. Load the hierarchy,
-save a floorplan, then load that trace file in the Replay tab.
+Suppose `top` is a small testbench that instantiates the real design under
+test as a sub-instance called `dut`. To look at `dut` itself instead of the
+testbench wrapper:
+
+```
+hier_dump chip.act top /tmp/chip_hier TB.dut
+```
+
+(replace `TB.dut` with whatever the actual dotted path to your design is —
+leave it off entirely if `top` *is* the design you want to look at).
+
+Open the `watch_all.scr` this creates, copy its `watch ...` and
+`vcd_start trace.vcd` lines into whatever script file you normally pipe
+into actsim, and run your simulation as usual — it will now also produce
+`trace.vcd`. In VisualAct: Design = `chip.act`, Top process = `top`, Focus
+instance path = `TB.dut`. Load the hierarchy, save a floorplan, then load
+`trace.vcd` in the Replay tab.
 
 ## Things to know
 

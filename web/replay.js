@@ -43,7 +43,7 @@
       svg.setAttribute("class", "edges");
       svg.innerHTML =
         '<defs><marker id="arrow2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">' +
-        '<path d="M0,0 L8,4 L0,8 z" fill="#888"/></marker></defs>';
+        '<path d="M0,0 L8,4 L0,8 z" fill="context-stroke"/></marker></defs>';
       canvas().appendChild(svg);
     }
     return svg;
@@ -122,9 +122,8 @@
       line.setAttribute("y1", p1.y);
       line.setAttribute("x2", p2.x);
       line.setAttribute("y2", p2.y);
-      line.setAttribute("stroke", "#888");
-      line.setAttribute("stroke-width", "1.5");
       line.setAttribute("marker-end", "url(#arrow2)");
+      line.dataset.channel = ch.name;
       svg.appendChild(line);
     });
 
@@ -258,6 +257,11 @@
     canvas().querySelectorAll(".node").forEach((el) => {
       const name = el.dataset.name;
       const c = colorFor(name, time);
+      el.classList.toggle("active", c === "active");
+      el.classList.toggle("blocked", c === "blocked");
+    });
+    canvas().querySelectorAll("svg.edges line").forEach((el) => {
+      const c = classifyChannel(el.dataset.channel, time);
       el.classList.toggle("active", c === "active");
       el.classList.toggle("blocked", c === "blocked");
     });

@@ -503,6 +503,23 @@ svg.edges {
   pointer-events: none;
 }
 
+svg.edges line {
+  stroke: var(--muted);
+  stroke-width: 1.5;
+  transition: stroke 0.15s ease, stroke-width 0.15s ease;
+}
+
+/* Replay tab only: a wire tints the same as the module coloring while its
+   channel is actively transacting or blocked waiting on a handshake. */
+svg.edges line.active {
+  stroke: var(--active);
+  stroke-width: 3;
+}
+svg.edges line.blocked {
+  stroke: var(--blocked);
+  stroke-width: 2.5;
+}
+
 .playback {
   flex: 0 0 auto;
   display: flex;
