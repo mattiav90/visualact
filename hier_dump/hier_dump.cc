@@ -317,10 +317,26 @@ int main(int argc, char **argv) {
     fprintf(stderr, "Could not open `%s' for writing\n", scrPath.c_str());
     return 1;
   }
+  // actsim's command-line reader (act/miniscm/lispCli.c) reads each line
+  // into a fixed 10240-byte buffer; a single `watch` line longer than that
+  // gets silently split mid-token on a subsequent read, corrupting the
+  // parse and dropping every channel after the break point with no error
+  // pointing back at `watch` itself (just a stray "Unknown command name"
+  // for whatever fragment follows). Designs with enough channels blow well
+  // past 10240 bytes on one line, so split into multiple `watch` lines,
+  // each kept safely under the limit.
+  const size_t kMaxWatchLineLen = 8000;
   if (!channels.empty()) {
-    fprintf(sf, "watch");
-    for (auto &c : channels) fprintf(sf, " %s", c.name.c_str());
-    fprintf(sf, "\n");
+    std::string line = "watch";
+    for (auto &c : channels) {
+      if (line.size() + 1 + c.name.size() > kMaxWatchLineLen) {
+        fprintf(sf, "%s\n", line.c_str());
+        line = "watch";
+      }
+      line += " ";
+      line += c.name;
+    }
+    fprintf(sf, "%s\n", line.c_str());
   }
   fprintf(sf, "vcd_start trace.vcd\n");
   fprintf(sf, "cycle\n");

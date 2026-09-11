@@ -11,13 +11,16 @@
   <h1>VisualAct</h1>
   <div class="inputs">
     <label>Design .act file
-      <input id="designPath" class="path-input" type="text" placeholder="/path/to/design.act" size="48" title="Exactly the file you'd pass to `actsim <file> <top>` for the real simulation.">
+      <input id="designPath" class="path-input" type="text" list="designPathList" placeholder="/path/to/design.act" size="48" title="Exactly the file you'd pass to `actsim <file> <top>` for the real simulation.">
+      <datalist id="designPathList"></datalist>
     </label>
     <label>Top process
-      <input id="topProc" type="text" placeholder="TopProcess" size="16" title="Exactly the process name you'd pass to `actsim <file> <top>` for the real simulation.">
+      <input id="topProc" type="text" list="topProcList" placeholder="TopProcess" size="16" title="Exactly the process name you'd pass to `actsim <file> <top>` for the real simulation.">
+      <datalist id="topProcList"></datalist>
     </label>
     <label>Focus instance path (optional)
-      <input id="watchPrefix" type="text" placeholder="e.g. TB.space" size="16" title="Dotted instance path from the top process above down to whichever sub-instance's own hierarchy you want to view (matches what you'd type after `watch` at the actsim prompt). Leave blank to view the top process itself.">
+      <input id="watchPrefix" type="text" list="watchPrefixList" placeholder="e.g. TB.space" size="16" title="Dotted instance path from the top process above down to whichever sub-instance's own hierarchy you want to view (matches what you'd type after `watch` at the actsim prompt). Leave blank to view the top process itself.">
+      <datalist id="watchPrefixList"></datalist>
     </label>
     <button id="loadBtn">&#128229; Load hierarchy</button>
     <button id="themeToggle" class="icon-btn" title="Toggle light/dark theme">&#9728;&#65039;</button>
@@ -47,7 +50,8 @@
     <div class="toolbar">
       <button id="runSimBtn">&#9654;&#65039; Run simulation (actsim)</button>
       <label>or load an existing trace.vcd
-        <input id="vcdOverride" class="path-input" type="text" placeholder="/path/to/trace.vcd (e.g. from your own build)" size="52">
+        <input id="vcdOverride" class="path-input" type="text" list="vcdOverrideList" placeholder="/path/to/trace.vcd (e.g. from your own build)" size="52">
+        <datalist id="vcdOverrideList"></datalist>
       </label>
       <button id="loadTraceBtn">&#128194; Load trace</button>
       <button id="channelStatusBtn" title="Show the channel-by-channel status (pending / just completed) of the currently selected module(s)">&#128202; Channel status</button>
@@ -74,6 +78,9 @@
       </label>
       <label>Activity window
         <input id="activityWindow" type="number" min="0" max="100" step="0.1" size="6" title="A channel counts as 'active' (green) if it had a real transaction within this % of the total trace length, centered on the current instant -- not just at this exact instant. Real transactions are near-instantaneous relative to typical trace lengths, so without a window even a very busy module would almost never show green. Defaults to 0.5%; increase to make brief bursts more visible, decrease for a more literal instant-by-instant view.">%
+      </label>
+      <label>Pending window &times;
+        <input id="blockedMultiplier" type="number" min="0" step="0.5" size="5" title="A channel counts as 'pending' (amber) only if it's currently blocked AND had a real transaction within (this number) x the Activity window. Too high and a one-time event from long ago (e.g. a startup flush touching every module) can make an otherwise-unused module look busy for a huge stretch of the trace afterward. Lower this if modules you know are unused still show amber; raise it if genuinely-used-but-bursty modules flicker white too often. Defaults to 5.">
       </label>
     </div>
     <div class="replay-body">

@@ -31,6 +31,44 @@ const AP = (function () {
     localStorage.setItem("ap.design", designInput().value.trim());
     localStorage.setItem("ap.top", topInput().value.trim());
     localStorage.setItem("ap.prefix", prefixInput().value.trim());
+    recordHistory("designPath", designInput().value);
+    recordHistory("topProc", topInput().value);
+    recordHistory("watchPrefix", prefixInput().value);
+  }
+
+  // Per-field "recently used" history, backing a native <datalist> dropdown
+  // on each text input -- click into the field (or start typing) and the
+  // browser shows past values so paths/names don't need retyping every time.
+  const MAX_HISTORY = 10;
+
+  function historyKey(fieldId) {
+    return `ap.history.${fieldId}`;
+  }
+
+  function getHistory(fieldId) {
+    try {
+      return JSON.parse(localStorage.getItem(historyKey(fieldId)) || "[]");
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function populateDatalist(fieldId) {
+    const list = document.getElementById(`${fieldId}List`);
+    if (!list) return;
+    list.innerHTML = getHistory(fieldId)
+      .map((v) => `<option value="${v.replace(/"/g, "&quot;")}"></option>`)
+      .join("");
+  }
+
+  function recordHistory(fieldId, value) {
+    value = (value || "").trim();
+    if (!value) return;
+    let hist = getHistory(fieldId).filter((v) => v !== value);
+    hist.unshift(value);
+    if (hist.length > MAX_HISTORY) hist = hist.slice(0, MAX_HISTORY);
+    localStorage.setItem(historyKey(fieldId), JSON.stringify(hist));
+    populateDatalist(fieldId);
   }
 
   // design+top+prefix together identify a run dir on the server (the
@@ -184,6 +222,7 @@ const AP = (function () {
 
   document.addEventListener("DOMContentLoaded", () => {
     restoreInputs();
+    ["designPath", "topProc", "watchPrefix", "vcdOverride"].forEach(populateDatalist);
     document.querySelectorAll(".tab-btn").forEach((b) => {
       b.addEventListener("click", () => setTab(b.dataset.tab));
     });
@@ -219,5 +258,6 @@ const AP = (function () {
     expandInstance,
     collapseInstance,
     applySearchHighlight,
+    recordHistory,
   };
 })();

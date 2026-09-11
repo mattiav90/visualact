@@ -7,6 +7,7 @@
     trace: null, // {end_time, channels: {name: [{t,state}]}}
     incidence: {}, // instName -> [channel name]
     activityWindowPct: 0.5, // % of total trace length; the user-facing knob
+    blockedMultiplier: 5, // "pending" window = activity window x this
     playing: false,
     curTime: 0,
     lastWall: 0,
@@ -183,22 +184,18 @@
   }
 
   // "Blocked" only means something if the channel is part of an ongoing
-  // exchange -- checking a much wider window than the "active" one (rather
-  // than "ever active in the ENTIRE trace") avoids a channel with a
-  // handful of real transactions total (e.g. a once-per-layer flush signal
-  // on an otherwise-idle module) reading as permanently "busy" just because
-  // it did something once, long ago or far in the future.
-  const BLOCKED_WINDOW_MULTIPLIER = 20;
-
-  // Single per-channel classification, shared by node coloring and the
-  // channel-status panel so they always agree: "active" = just completed a
-  // real transfer (within the activity window), "blocked" = currently
-  // waiting on a handshake partner (and part of a real ongoing exchange,
-  // not just a wire that's never once been used), "idle" = neither.
+  // exchange -- checking a wider window than the "active" one (rather than
+  // "ever active in the ENTIRE trace") avoids a channel with a handful of
+  // real transactions total (e.g. a once-per-run startup flush that
+  // briefly touches every module, used or not) reading as permanently
+  // "busy" long after (or before) that one-time event. How much wider is
+  // trace-dependent -- too generous and a stale event from a startup/flush
+  // phase can bleed into the entire "interesting" part of the trace, which
+  // is exactly what `blockedMultiplier` (user-adjustable) is for.
   function classifyChannel(channelName, time) {
     const half = halfWindow();
     if (hasActiveInWindow(channelName, time, half)) return "active";
-    const blockedHalf = half * BLOCKED_WINDOW_MULTIPLIER;
+    const blockedHalf = half * replay.blockedMultiplier;
     if (stateAt(channelName, time) === "blocked" && hasActiveInWindow(channelName, time, blockedHalf)) {
       return "blocked";
     }
@@ -323,11 +320,15 @@
       status.textContent = "loading trace...";
       const override = document.getElementById("vcdOverride").value.trim();
       const params = AP.params();
-      if (override) params.set("vcd", override);
+      if (override) {
+        params.set("vcd", override);
+        AP.recordHistory("vcdOverride", override);
+      }
       const trace = await AP.getJSON(`/api/trace?${params}`);
       replay.trace = trace;
 
       document.getElementById("activityWindow").value = replay.activityWindowPct;
+      document.getElementById("blockedMultiplier").value = replay.blockedMultiplier;
 
       renderStatic();
       document.getElementById("scrubber").max = trace.end_time;
@@ -365,6 +366,10 @@
     });
     document.getElementById("activityWindow").addEventListener("input", (e) => {
       replay.activityWindowPct = Math.min(100, Math.max(0, parseFloat(e.target.value) || 0));
+      paint(replay.curTime);
+    });
+    document.getElementById("blockedMultiplier").addEventListener("input", (e) => {
+      replay.blockedMultiplier = Math.max(0, parseFloat(e.target.value) || 0);
       paint(replay.curTime);
     });
     document.getElementById("channelStatusBtn").addEventListener("click", () => {
