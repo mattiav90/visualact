@@ -42,8 +42,8 @@ comes out of it.
    `[focus-path]` is optional. Use it if the module you actually want to
    look at is nested inside something else (like a test bench). For
    example if your top process is `top`, and `top` contains `TB`, and `TB`
-   contains `space`, and `space` is the part you actually care about, then
-   the focus path is `TB.space`.
+   contains `dut`, and `dut` is the part you actually care about, then
+   the focus path is `TB.dut`.
 3. Open the `watch_all.scr` file it created. Copy the `watch ...` line
    (and the `vcd_start trace.vcd` line) into whatever script file you
    normally give actsim, before the `cycle`/`run`/`exit` lines.

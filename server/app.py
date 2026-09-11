@@ -160,8 +160,8 @@ def api_run():
 @app.route("/api/trace")
 def api_trace():
     # `vcd` lets you point at a trace produced outside this tool's own
-    # /api/run -- e.g. a Makefile-driven project (like SPACE) that stages its
-    # own watch script and writes trace.vcd into its own build/testcache dir.
+    # /api/run -- e.g. a Makefile-driven project that stages its own watch
+    # script and writes trace.vcd into its own build/testcache dir.
     override = request.args.get("vcd")
     if override:
         vcd_path = os.path.abspath(os.path.expanduser(override))

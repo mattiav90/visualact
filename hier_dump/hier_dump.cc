@@ -10,19 +10,19 @@
  * `actsim <design.act> <SimulatedTopProcess>` for the real simulation --
  * i.e. the actual root of the design as far as actsim is concerned, however
  * uninteresting a wrapper it is. <focus-path> is a dotted instance path
- * (e.g. `TB.space`, matching what you'd type after `watch` at the actsim
+ * (e.g. `TB.dut`, matching what you'd type after `watch` at the actsim
  * prompt) from that real top down to whichever sub-instance's own hierarchy
  * you actually want dumped -- e.g. if `top` instantiates `test TB;` and
- * `test` instantiates `SPACE space;`, then `-focus-path TB.space` dumps
- * SPACE's direct sub-instances/channels, and every channel name written to
- * hierarchy.json/watch_all.scr is automatically prefixed with `TB.space.` so
+ * `test` instantiates `MyDesign dut;`, then `-focus-path TB.dut` dumps
+ * MyDesign's direct sub-instances/channels, and every channel name written to
+ * hierarchy.json/watch_all.scr is automatically prefixed with `TB.dut.` so
  * it's directly watchable from the real simulated top -- no separate,
  * manually-kept-in-sync "watch prefix" to get wrong.
  *
  * Two kinds of channel endpoint are unified through the same mechanism:
  *   - a locally-declared named channel variable in a process's scope
  *     (e.g. `chan(T) C;`), and
- *   - a sub-instance's channel-typed port (e.g. `space.DATA_IN`, reached
+ *   - a sub-instance's channel-typed port (e.g. `dut.DATA_IN`, reached
  *     without any local channel variable, e.g. `a.O = b.I;`).
  * Both resolve to the same union-find `act_connection*` via
  * `ActId::Canonical()`, so grouping every endpoint by its canonical pointer

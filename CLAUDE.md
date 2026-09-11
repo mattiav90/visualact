@@ -90,7 +90,7 @@ expanded `Array(int idx)` deref itself.
 `<design.act>`/`<SimulatedTopProcess>` are **always** the literal values
 you'd pass to a real `actsim` invocation — never a "shortcut" file that
 skips over a boring testbench wrapper. `[focus-path]` is a dotted instance
-path (matching `watch` syntax, e.g. `TB.space`) from that real top down to
+path (matching `watch` syntax, e.g. `TB.dut`) from that real top down to
 whichever process's own hierarchy to actually dump.
 
 Resolution walks the path one component at a time from the top process's
@@ -102,7 +102,7 @@ the prefix applied to every generated channel's watch-name.
 
 This design replaced an earlier, worse one where "which process to dump"
 and "what prefix to watch it with" were two separately-typed, easy-to-get-
-out-of-sync values (`SPACE.act`/`SPACE` + a manually-computed `TB.space`
+out-of-sync values (`chip.act`/`top` + a manually-computed `TB.dut`
 prefix). That mismatch caused a real bug: the hierarchy's channel names
 didn't match the trace's at all, so replay silently showed everything
 permanently idle with no error. Don't reintroduce a two-field version of
@@ -114,10 +114,9 @@ this.
   disables the `watch` printf side-effect while keeping VCD recording —
   they're the same `verb & 1` bit in `ChpSim::_chkWatchBreakPt`
   (`actsim/chpsim.cc`). If a user wants a quiet terminal, the caller has to
-  redirect actsim's whole stdout to a file themselves (see SPACE's
-  `run_sim0` target in `Makefile.space.targets` for a real example — it
-  redirects `> actsim_console.txt 2>&1`, since actsim's own elaboration
-  phase is *also* very noisy on stdout regardless of watch).
+  redirect actsim's whole stdout to a file themselves (e.g. a Makefile
+  target running `actsim ... > actsim_console.txt 2>&1`), since actsim's
+  own elaboration phase is *also* very noisy on stdout regardless of watch.
 - `cycle` (no argument) runs until natural termination; some older docs/
   examples show `cycle <n>` but that's not this build's syntax.
 - VCD encoding for a watched channel (`actsim/tracelib/vcd.cc`): `bz` =
@@ -213,15 +212,14 @@ in `replay.js`:
   overwhelming majority of their time blocked/idle regardless of whether
   they're actually doing meaningful work.
 
-This was empirically tuned against a real SPACE trace where a golden-model
-utilization report said only 2-4 of 64 PEs were active for a given conv
-layer — before this fix, *every* PE showed "blocked" almost always (since
-any wired-but-unused channel gets stuck blocked from startup and never
-resolves); after, unused PEs correctly read idle most of the time. If this
-regresses, re-derive against real data rather than guessing constants —
-see the conversation history for the exact validation methodology (sample
-random timestamps, compare color distributions for a known-active vs.
-known-idle module).
+This was empirically tuned against a real large-array design where a
+golden-model utilization report said only a handful of processing elements
+out of dozens were active for a given input — before this fix, *every*
+element showed "blocked" almost always (since any wired-but-unused channel
+gets stuck blocked from startup and never resolves); after, unused elements
+correctly read idle most of the time. If this regresses, re-derive against
+real data rather than guessing constants (sample random timestamps, compare
+color distributions for a known-active vs. known-idle module).
 
 ## Server gotcha: never test-write against the user's live params
 
@@ -243,19 +241,19 @@ balance checks were used as a crude sanity check after editing JS, but
 that's not a substitute for real verification. Actual correctness was
 always confirmed by running the real Flask server and hitting it with
 `curl` against real ACT designs (the `119.act` actsim test file for quick
-iteration; the real SPACE design for anything array/prefix/trace-related) —
-don't trust an untested frontend change; there's no automated test suite
-here.
+iteration; a larger real-world array-based design for anything
+array/prefix/trace-related) — don't trust an untested frontend change;
+there's no automated test suite here.
 
-## SPACE-specific state (as of this writing)
+## actsim's hard line-length limit (a real, previously-undocumented bug)
 
-`~/Yale/project/SPACE/scripts/simulation/actsim_files/act_ref0.scr` has a
-`watch` line covering all 369 top-level channels of the `SPACE` process
-(focus path `TB.space` from the real `top.act`/`top` entry point), plus
-`vcd_start trace.vcd`. `Makefile.space.targets`'s `run_sim0` target
-redirects actsim's stdout to `actsim_console.txt` instead of the terminal.
-If SPACE's instance/channel structure changes (new sub-modules, etc.),
-regenerate `watch_all.scr` via `hier_dump top.act top <outdir> TB.space`
-and replace the `watch` line in `act_ref0.scr` — the Replay tab's
-"N/M channels matched" status line is the way to detect when this drifts
-out of sync.
+actsim's command-line reader (`miniscm/lispCli.c`) reads each line into a
+fixed **10,240-byte** buffer. A single `watch` line listing hundreds of
+channels can exceed this — the read silently splits mid-token, corrupting
+the parse and dropping every channel after the break point, with no error
+that points back at `watch` itself (you'll instead see something like
+`Unknown command name '.OUT'` deep in the console output). `hier_dump`
+works around this by splitting the generated `watch` command across
+multiple lines, each kept under ~8000 bytes — see the `kMaxWatchLineLen`
+constant in `hier_dump.cc`. If you ever hand-write or hand-edit a `.scr`
+file with a large `watch` list, apply the same split.

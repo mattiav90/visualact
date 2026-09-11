@@ -25,6 +25,83 @@
     });
   }
 
+  // Click-drag on empty canvas draws a selection rectangle; every node it
+  // overlaps becomes the new selection (mirrors the Floorplan tab's marquee).
+  function setupMarquee() {
+    const c = canvas();
+    let active = false;
+    let startX, startY;
+    let rectEl = null;
+
+    function canvasPoint(e) {
+      const rect = c.getBoundingClientRect();
+      return {
+        x: e.clientX - rect.left + c.scrollLeft,
+        y: e.clientY - rect.top + c.scrollTop,
+      };
+    }
+
+    function intersects(a, b) {
+      return !(b.x > a.x + a.w || b.x + b.w < a.x || b.y > a.y + a.h || b.y + b.h < a.y);
+    }
+
+    c.addEventListener("mousedown", (e) => {
+      if (e.target !== c) return; // only start on empty canvas background
+      active = true;
+      const p = canvasPoint(e);
+      startX = p.x;
+      startY = p.y;
+      rectEl = document.createElement("div");
+      rectEl.className = "marquee";
+      rectEl.style.left = startX + "px";
+      rectEl.style.top = startY + "px";
+      rectEl.style.width = "0px";
+      rectEl.style.height = "0px";
+      c.appendChild(rectEl);
+      if (!isMultiKey(e)) replay.selected = new Set();
+      e.preventDefault();
+    });
+
+    window.addEventListener("mousemove", (e) => {
+      if (!active) return;
+      const p = canvasPoint(e);
+      const x = Math.min(startX, p.x);
+      const y = Math.min(startY, p.y);
+      const w = Math.abs(p.x - startX);
+      const h = Math.abs(p.y - startY);
+      rectEl.style.left = x + "px";
+      rectEl.style.top = y + "px";
+      rectEl.style.width = w + "px";
+      rectEl.style.height = h + "px";
+
+      const marqueeBox = { x, y, w, h };
+      AP.flattenVisible().forEach((node) => {
+        const b = box(node.qName);
+        if (!b) return;
+        const hit = intersects(marqueeBox, b);
+        if (hit) {
+          replay.selected.add(node.qName);
+        } else if (!isMultiKey(e)) {
+          replay.selected.delete(node.qName);
+        }
+      });
+      applySelectionClasses();
+    });
+
+    window.addEventListener("mouseup", () => {
+      if (!active) return;
+      active = false;
+      if (rectEl) {
+        rectEl.remove();
+        rectEl = null;
+      }
+      if (replay.selected.size > 0) {
+        document.getElementById("channelPanel").hidden = false;
+      }
+      updateChannelPanel();
+    });
+  }
+
   // Half-window in trace-time-units either side of the current instant,
   // e.g. pct=100 -> half-window covers the whole trace (always "active" if
   // ever active at all); pct=50 -> a window spanning half the trace,
@@ -359,6 +436,7 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
+    setupMarquee();
     document.getElementById("runSimBtn").addEventListener("click", runSim);
     document.getElementById("loadTraceBtn").addEventListener("click", loadTrace);
     document.getElementById("playPauseBtn").addEventListener("click", () =>
